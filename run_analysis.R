@@ -1,40 +1,34 @@
-library(reshape2)
+##Caching the inverse of a matrix
+
+##This function creates a special matrix object that can cache its inverse
+
+makeCacheMatrix <- function(x=matrix())
+{
+inv <- NULL
+set <- function(y)
+{
+  x <<- y
+inv <<- NULL
+}
+get <- function() x
+setInverse <- function(inverse) inv <<- inverse
+getInverse <- function()inv
+list(set=set, get=get, setInverse=setInverse, getInverse=getInverse)
+}
 
 
-# Load activity labels + features
-activityLabels <- read.table("C:/Users/CPF/Desktop/UCI HAR Dataset/activity_labels.txt")
-activityLabels[,2] <- as.character(activityLabels[,2])
-features <- read.table("C:/Users/CPF/Desktop/UCI HAR Dataset/features.txt")
-features[,2] <- as.character(features[,2])
+##This function computes the inverse of a matrix created by makeCacheMatrix above
 
-# Extract only the data on mean and standard deviation
-featuresWanted <- grep(".*mean.*|.*std.*", features[,2])
-featuresWanted.names <- features[featuresWanted,2]
-featuresWanted.names = gsub('-mean', 'Mean', featuresWanted.names)
-featuresWanted.names = gsub('-std', 'Std', featuresWanted.names)
-featuresWanted.names <- gsub('[-()]', '', featuresWanted.names)
-
-
-# Load the datasets
-train <- read.table("C:/Users/CPF/Desktop/UCI HAR Dataset/train/X_train.txt")[featuresWanted]
-trainActivities <- read.table("C:/Users/CPF/Desktop/UCI HAR Dataset/train/Y_train.txt")
-trainSubjects <- read.table("C:/Users/CPF/Desktop/UCI HAR Dataset/train/subject_train.txt")
-train <- cbind(trainSubjects, trainActivities, train)
-
-test <- read.table("C:/Users/CPF/Desktop/UCI HAR Dataset/test/X_test.txt")[featuresWanted]
-testActivities <- read.table("C:/Users/CPF/Desktop/UCI HAR Dataset/test/Y_test.txt")
-testSubjects <- read.table("C:/Users/CPF/Desktop/UCI HAR Dataset/test/subject_test.txt")
-test <- cbind(testSubjects, testActivities, test)
-
-# merge datasets and add labels
-allData <- rbind(train, test)
-colnames(allData) <- c("subject", "activity", featuresWanted.names)
-
-# turn activities & subjects into factors
-allData$activity <- factor(allData$activity, levels = activityLabels[,1], labels = activityLabels[,2])
-allData$subject <- as.factor(allData$subject)
-
-allData.melted <- melt(allData, id = c("subject", "activity"))
-allData.mean <- dcast(allData.melted, subject + activity ~ variable, mean)
-
-write.table(allData.mean, "tidy decha.txt", row.names = FALSE, quote = FALSE)
+cacheSolve <- function(x, ...)
+{
+  inv <- x$getInverse()
+  if(!is.null(inverse))
+  {
+    message("getting cached data")
+    return (inv)
+  }
+  mat <- x$get()
+  inv <- solve(mat, ...)
+  x$setInverse(inv)
+  inv
+}
